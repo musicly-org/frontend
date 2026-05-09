@@ -1,4 +1,3 @@
-import { SiteHeader } from '@/components/organisms/site-header'
 import { EntityHero } from '@/components/organisms/entity-hero'
 import { RelationSection } from '@/components/organisms/relation-section'
 import { RelationCard } from '@/components/molecules/relation-card'
@@ -13,7 +12,6 @@ interface ArtistPageProps {
 export function ArtistPage({ artist, albums, songs }: ArtistPageProps) {
   return (
     <div className="min-h-screen">
-      <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <EntityHero
           title={artist.name}
@@ -56,6 +54,8 @@ export function ArtistPage({ artist, albums, songs }: ArtistPageProps) {
                 href={song.routeHref}
                 title={song.title}
                 metadata={song.releasedAt}
+                imageUrl={song.imageUrl}
+                imageAlt={song.title}
               />
             ))}
           </RelationSection>

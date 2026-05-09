@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { loadDefaultAlbumVersionFromAlbumId } from '@/lib/catalog-api'
+import { loadDefaultReleaseFromAlbumId } from '@/lib/catalog-api'
 
 interface AlbumPageProps {
   params: Promise<{ albumId: string }>
@@ -11,13 +11,13 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
   let routeHref: string
 
   try {
-    const defaultVersion = await loadDefaultAlbumVersionFromAlbumId(albumId)
+    const defaultRelease = await loadDefaultReleaseFromAlbumId(albumId)
 
-    if (!defaultVersion) {
+    if (!defaultRelease) {
       notFound()
     }
 
-    routeHref = defaultVersion.routeHref
+    routeHref = defaultRelease.routeHref
   } catch {
     notFound()
   }

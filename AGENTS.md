@@ -30,48 +30,33 @@ npm run build
 - Centralize backend communication in an API client layer.
 - Do not scatter raw `fetch` calls across UI components.
 - Do not depend on backend persistence/entity shapes.
-- Before loading catalog data, load the backend API root resource first.
-- The backend base URL is the only backend URL the frontend may configure directly.
-- Never generate backend API paths or resource URLs in frontend code.
-- All catalog requests after bootstrap must use URLs obtained from backend `_links`.
-- Follow root `_links` for entry points such as artists, albums, songs, versions, and tracks.
-- Follow each resource's `_links` for related data and navigation.
-- Treat relation names as the contract; do not infer URLs from ids, slugs, route names, or entity shapes.
-- Keep link traversal and response parsing in the API client layer.
+- Prefer following HATEOAS `_links` when present.
+- Avoid hardcoding backend URLs outside the API client/bootstrap configuration.
 
 Expected relation names:
 
 - `artists`
 - `albums`
-- `album-versions`
+- `releases`
 - `songs`
-- `song-versions`
 - `tracks`
 
 ## UI Structure
 
-- Use the Next.js App Router under `app/`.
-- Use atomic design for frontend components.
-- Place shadcn/Radix-style primitives and tiny presentational building blocks under `components/ui` or `components/atoms`.
-- Place simple component combinations under `components/molecules`.
-- Place section-level compositions under `components/organisms`.
-- Place page-level compositions under `components/templates`.
-- Place non-visual React context providers under `components/providers`.
-- Keep `app/` routes thin; they should compose templates and trigger data loading, not hold reusable UI.
-- Routes in `app/` should compose templates and reusable components, not contain reusable layout primitives.
-- Separate routes from reusable UI components.
+- Use atomic design for UI components.
+- Place reusable components under `components/{atoms,molecules,organisms,templates}`.
+- App routes in `app/` should compose templates/organisms, not contain reusable layout primitives.
+- Separate pages from reusable UI components.
 - Keep API models separate from view models when transformations are needed.
 - Handle loading, error, and empty states explicitly.
 - Keep routing and data-fetching boundaries clear.
-- When moving existing components toward atomic design, prefer incremental refactors over broad directory churn.
-- Do not put data-fetching logic in atoms, molecules, or organisms; keep it in routes, templates, or the API client layer.
 
 Expected catalog experiences:
 
 - Artists list
 - Artist details
 - Albums list
-- Album versions
+- Releases
 - Tracklist view
 
 ## Testing
