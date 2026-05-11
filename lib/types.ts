@@ -26,7 +26,7 @@ export interface Album extends LinkedResource {
   imageUrl?: string
 }
 
-export interface AlbumVersion extends LinkedResource {
+export interface Release extends LinkedResource {
   title: string
   releasedAt?: string
   imageUrl?: string
@@ -36,16 +36,15 @@ export interface AlbumVersion extends LinkedResource {
 export interface Song extends LinkedResource {
   title: string
   releasedAt?: string
-}
-
-export interface SongVersion extends LinkedResource {
-  title: string
-  durationSeconds?: number
-  releasedAt?: string
+  imageUrl?: string
+  detailRouteHref?: string
 }
 
 export interface Track extends LinkedResource {
+  title: string
+  imageUrl?: string
+  durationSeconds?: number
+  releasedAt?: string
   discNumber: number
   trackNumber: number
-  songVersion?: SongVersion
 }
