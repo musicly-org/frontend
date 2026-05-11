@@ -4,7 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface RelationCardProps {
-  href: string
+  href?: string
   title: string
   subtitle?: string
   metadata?: string
@@ -31,17 +31,23 @@ export function RelationCard({
     defaultVersion ? 'Default' : undefined,
   ].filter((item): item is string => Boolean(item))
 
-  return (
-    <Link
-      href={href}
-      aria-current={current ? 'page' : undefined}
-      className={cn(
-        'group flex items-center gap-4 p-3 -mx-3 rounded-lg transition-colors',
-        current
-          ? 'bg-accent/10 ring-1 ring-accent/25'
-          : 'hover:bg-muted/50',
-      )}
-    >
+  const cardClassName = cn(
+    'group flex items-center gap-4 p-3 -mx-3 rounded-lg transition-colors',
+    current
+      ? 'bg-accent/10 ring-1 ring-accent/25'
+      : href
+        ? 'hover:bg-muted/50'
+        : 'cursor-default',
+  )
+
+  const chevronClassName = cn(
+    'h-5 w-5 shrink-0 transition-colors',
+    current ? 'text-accent' : 'text-muted-foreground/40 group-hover:text-accent',
+    !href && 'hidden',
+  )
+
+  const content = (
+    <>
       {imageUrl ? (
         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-muted shadow-sm">
           <Image
@@ -92,11 +98,22 @@ export function RelationCard({
           <p className="text-xs text-muted-foreground/80">{metadata}</p>
         )}
       </div>
-      <ChevronRight className={cn(
-        'h-5 w-5 shrink-0 transition-colors',
-        current ? 'text-accent' : 'text-muted-foreground/40 group-hover:text-accent',
-      )} />
+      <ChevronRight className={chevronClassName} />
+    </>
+  )
+
+  return href ? (
+    <Link
+      href={href}
+      aria-current={current ? 'page' : undefined}
+      className={cardClassName}
+    >
+      {content}
     </Link>
+  ) : (
+    <div className={cardClassName}>
+      {content}
+    </div>
   )
 }
 
