@@ -93,7 +93,7 @@ async function loadRoot(): Promise<HalResource> {
   return fetchJson<HalResource>(backendBaseUrl)
 }
 
-async function expandRootTemplate(rel: string, id: string): Promise<string> {
+export async function expandRootTemplate(rel: string, id: string): Promise<string> {
   const root = await loadRoot()
   const template = link(root._links, rel).href
 
@@ -155,15 +155,11 @@ function uniqueBy<T>(items: T[], keyOf: (item: T) => string): T[] {
 }
 
 export function artistRoute(href: string): string {
-  return `/artists/${routeId(href)}`
+  return `/artist/${routeId(href)}`
 }
 
-export function albumRoute(href: string): string {
-  return `/albums/${routeId(href)}`
-}
-
-export function releaseRoute(albumHref: string, releaseHref: string): string {
-  return `/albums/${routeId(albumHref)}/releases/${routeId(releaseHref)}`
+export function releaseRoute(releaseHref: string): string {
+  return `/release/${routeId(releaseHref)}`
 }
 
 export function songRoute(href: string): string {
@@ -187,13 +183,13 @@ function toArtist(resource: ArtistResource): Artist {
   }
 }
 
-function toAlbum(resource: AlbumResource): Album {
+function toAlbum(resource: AlbumResource, routeHref: string): Album {
   const href = selfHref(resource)
 
   return {
     id: routeId(href),
     href,
-    routeHref: albumRoute(href),
+    routeHref,
     links: resource._links ?? {},
     title: resource.title,
     releasedAt: optionalText(resource.releasedAt),
@@ -214,12 +210,11 @@ function toRelease(
   } = {},
 ): Release {
   const href = selfHref(resource)
-  const albumHref = options.albumHref ?? optionalLink(resource._links, 'album') ?? href
 
   return {
     id: routeId(href),
     href,
-    routeHref: releaseRoute(albumHref, href),
+    routeHref: releaseRoute(href),
     links: resource._links ?? {},
     title: resource.title,
     releasedAt: optionalText(resource.releasedAt),
@@ -297,6 +292,19 @@ export async function loadArtistPage(artistHref: string): Promise<{
     fetchCollection<AlbumResource>(link(artist.links, 'albums').href),
     fetchCollection<SongResource>(link(artist.links, 'songs').href),
   ])
+  const albumsWithReleaseRoutes = await Promise.all(
+    albums.map(async (albumResource) => {
+      const albumHref = selfHref(albumResource)
+      const defaultRelease = await loadDefaultReleaseFromAlbum(albumHref, {
+        artistHref: artist.href,
+        albumTitle: albumResource.title,
+        albumReleasedAt: albumResource.releasedAt,
+        albumImageUrl: albumResource.imageUrl,
+      })
+
+      return toAlbum(albumResource, defaultRelease.routeHref)
+    }),
+  )
 
   const songsWithTrackRoutes = await Promise.all(
     songs.map(async (songResource) => {
@@ -308,7 +316,7 @@ export async function loadArtistPage(artistHref: string): Promise<{
         ? {
             ...song,
             imageUrl: firstTrack.imageUrl,
-            routeHref: firstTrack.routeHref,
+            detailRouteHref: firstTrack.routeHref,
           }
         : song
     }),
@@ -316,8 +324,7 @@ export async function loadArtistPage(artistHref: string): Promise<{
 
   return {
     artist,
-    albums: albums
-      .map(toAlbum)
+    albums: albumsWithReleaseRoutes
       .sort((a, b) => {
         if (a.releasedAt && b.releasedAt) {
           return a.releasedAt.localeCompare(b.releasedAt)
@@ -394,27 +401,7 @@ export async function loadDefaultReleaseFromAlbum(albumHref: string, options: {
   })
 }
 
-export async function loadDefaultReleaseFromAlbumId(albumId: string, options: {
-  artistId?: string
-  albumTitle?: string | null
-  albumReleasedAt?: string | null
-  albumImageUrl?: string | null
-} = {}): Promise<Release> {
-  const [albumHref, artistHref] = await Promise.all([
-    expandRootTemplate('album', albumId),
-    options.artistId ? expandRootTemplate('artist', options.artistId) : Promise.resolve(undefined),
-  ])
-
-  return loadDefaultReleaseFromAlbum(albumHref, {
-    artistHref,
-    albumTitle: options.albumTitle,
-    albumReleasedAt: options.albumReleasedAt,
-    albumImageUrl: options.albumImageUrl,
-  })
-}
-
 export async function loadReleasePage(options: {
-  albumHref: string
   releaseHref: string
   releasesHref?: string
   albumTitle?: string | null
@@ -430,9 +417,8 @@ export async function loadReleasePage(options: {
   await loadRoot()
 
   const releaseResource = await fetchResource<ReleaseResource>(options.releaseHref)
-  const canonicalAlbumHref = optionalLink(releaseResource._links, 'album') ?? options.albumHref
+  const canonicalAlbumHref = link(releaseResource._links, 'album').href
   const albumResource = await fetchResource<AlbumResource>(canonicalAlbumHref)
-  const albumFromBackend = toAlbum(albumResource)
   const resolvedReleasesHref = options.releasesHref ?? optionalLink(albumResource._links, 'releases')
   const releaseResources = resolvedReleasesHref
     ? await fetchCollection<ReleaseResource>(resolvedReleasesHref)
@@ -441,20 +427,28 @@ export async function loadReleasePage(options: {
   const release = toRelease(releaseResource, {
     albumHref: canonicalAlbumHref,
     releasesHref: resolvedReleasesHref,
-    albumTitle: options.albumTitle ?? albumFromBackend.title,
-    albumReleasedAt: options.albumReleasedAt ?? albumFromBackend.releasedAt,
-    albumImageUrl: options.albumImageUrl ?? albumFromBackend.imageUrl,
+    albumTitle: options.albumTitle ?? albumResource.title,
+    albumReleasedAt: options.albumReleasedAt ?? optionalText(albumResource.releasedAt),
+    albumImageUrl: options.albumImageUrl ?? optionalText(albumResource.imageUrl),
   })
+  const defaultReleaseResource = releaseResources.find((item) => item.default) ?? releaseResources[0] ?? releaseResource
+  const albumRouteHref = toRelease(defaultReleaseResource, {
+    albumHref: canonicalAlbumHref,
+    releasesHref: resolvedReleasesHref,
+    albumTitle: options.albumTitle ?? albumResource.title,
+    albumReleasedAt: options.albumReleasedAt ?? optionalText(albumResource.releasedAt),
+    albumImageUrl: options.albumImageUrl ?? optionalText(albumResource.imageUrl),
+    isDefault: defaultReleaseResource.default ?? true,
+  }).routeHref
   const album: Album = {
-    ...albumFromBackend,
-    routeHref: albumRoute(canonicalAlbumHref),
+    ...toAlbum(albumResource, albumRouteHref),
     links: {
-      ...albumFromBackend.links,
+      ...albumResource._links,
       releases: resolvedReleasesHref ? { href: resolvedReleasesHref } : undefined,
     },
-    title: options.albumTitle ?? albumFromBackend.title,
-    releasedAt: options.albumReleasedAt ?? albumFromBackend.releasedAt,
-    imageUrl: options.albumImageUrl ?? albumFromBackend.imageUrl,
+    title: options.albumTitle ?? albumResource.title,
+    releasedAt: options.albumReleasedAt ?? optionalText(albumResource.releasedAt),
+    imageUrl: options.albumImageUrl ?? optionalText(albumResource.imageUrl),
   }
   const releaseListResources = releaseResources.some((item) => selfHref(item) === options.releaseHref)
     ? releaseResources
@@ -501,7 +495,7 @@ export async function loadReleasePage(options: {
   }
 }
 
-export async function loadReleasePageByIds(albumId: string, releaseId: string, options: {
+export async function loadReleasePageById(releaseId: string, options: {
   albumTitle?: string | null
   albumReleasedAt?: string | null
   albumImageUrl?: string | null
@@ -512,13 +506,9 @@ export async function loadReleasePageByIds(albumId: string, releaseId: string, o
   tracks: Track[]
   allReleases: Release[]
 }> {
-  const [albumHref, releaseHref] = await Promise.all([
-    expandRootTemplate('album', albumId),
-    expandRootTemplate('release', releaseId),
-  ])
+  const releaseHref = await expandRootTemplate('release', releaseId)
 
   return loadReleasePage({
-    albumHref,
     releaseHref,
     albumTitle: options.albumTitle,
     albumReleasedAt: options.albumReleasedAt,
@@ -570,15 +560,14 @@ export async function loadTrackPage(trackHref: string): Promise<{
       return acc
     }
 
-    const itemReleaseId = routeId(itemReleaseHref)
-    if (!acc[itemReleaseId]) {
-      acc[itemReleaseId] = item.routeHref
+    if (!acc[itemReleaseHref]) {
+      acc[itemReleaseHref] = item.routeHref
     }
 
     return acc
   }, {})
   const releaseResources = await Promise.all(
-    Object.keys(releaseTrackHrefs).map((id) => expandRootTemplate('release', id).then(fetchResource<ReleaseResource>)),
+    Object.keys(releaseTrackHrefs).map((href) => fetchResource<ReleaseResource>(href)),
   )
   const releasePages = uniqueBy(
     releaseResources.map((resource) => toRelease(resource)),
@@ -586,7 +575,7 @@ export async function loadTrackPage(trackHref: string): Promise<{
   )
   const releases = releasePages.map((release) => ({
     ...release,
-    routeHref: releaseTrackHrefs[release.id] ?? track.routeHref,
+    routeHref: releaseTrackHrefs[release.href] ?? track.routeHref,
   }))
   const artists = await artistsPromise
   const currentReleasePage = releasePages.find((release) => release.id === releaseId)
@@ -616,6 +605,14 @@ async function fetchTracks(tracksHref: string): Promise<Track[]> {
   const tracks = await fetchCollection<TrackResource>(tracksHref)
 
   return uniqueBy(tracks.map((track) => toTrack(track)), (track) => track.id).sort((a, b) => {
+    if (a.discNumber !== b.discNumber) {
+      return a.discNumber - b.discNumber
+    }
+
+    if (a.trackNumber !== b.trackNumber) {
+      return a.trackNumber - b.trackNumber
+    }
+
     if (a.releasedAt && b.releasedAt) {
       const releasedAtComparison = a.releasedAt.localeCompare(b.releasedAt)
       if (releasedAtComparison !== 0) {
@@ -627,10 +624,6 @@ async function fetchTracks(tracksHref: string): Promise<Track[]> {
       return 1
     }
 
-    if (a.discNumber !== b.discNumber) {
-      return a.discNumber - b.discNumber
-    }
-
-    return a.trackNumber - b.trackNumber
+    return 0
   })
 }

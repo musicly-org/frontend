@@ -51,11 +51,12 @@ export function ArtistPage({ artist, albums, songs }: ArtistPageProps) {
             {songs.map((song) => (
               <RelationCard
                 key={song.id}
-                href={song.routeHref}
+                href={song.detailRouteHref}
                 title={song.title}
                 metadata={song.releasedAt}
                 imageUrl={song.imageUrl}
                 imageAlt={song.title}
+                badge={song.detailRouteHref ? undefined : 'No tracks'}
               />
             ))}
           </RelationSection>

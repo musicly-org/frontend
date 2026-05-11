@@ -59,7 +59,7 @@ npm run start
 
 ## Architecture Notes
 
-- Backend communication is centralized in [`lib/catalog-api.ts`](/home/alaksiej/Projects/musicly/frontend/lib/catalog-api.ts).
+- Backend communication is centralized in [`lib/catalog-api.ts`](./lib/catalog-api.ts).
 - The frontend must load the backend API root first, then follow `_links` for catalog resources.
 - Frontend routes may use ids derived from backend self links, but the frontend must not generate backend API URLs from those ids.
 - Reusable UI lives under `components/`, while route entrypoints stay under `app/`.
@@ -67,10 +67,8 @@ npm run start
 ## Current Routes
 
 - `/` for the artists index
-- `/artists/[artistId]`
-- `/albums/[albumId]`
-- `/albums/[albumId]/releases/[releaseId]`
-- `/songs/[songId]/tracks/[trackId]` as a compatibility route that forwards users into the canonical track experience
+- `/artist/[artistId]`
+- `/release/[releaseId]`
 - `/track/[trackId]` as the canonical track details route
 
 ## Known Gap

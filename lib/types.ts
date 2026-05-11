@@ -37,6 +37,7 @@ export interface Song extends LinkedResource {
   title: string
   releasedAt?: string
   imageUrl?: string
+  detailRouteHref?: string
 }
 
 export interface Track extends LinkedResource {
