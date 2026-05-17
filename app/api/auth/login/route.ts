@@ -5,9 +5,8 @@ import { isBackendAuthError, loginAgainstBackend } from '@/lib/auth-api'
 import type { LoginPayload } from '@/lib/auth'
 
 export async function POST(request: Request) {
-  const payload = (await request.json()) as LoginPayload
-
   try {
+    const payload = (await request.json()) as LoginPayload
     const token = await loginAgainstBackend(payload)
     const session = createSession(token)
 
@@ -15,6 +14,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ session: toPublicSession(session) })
   } catch (error) {
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ message: 'Invalid JSON body' }, { status: 400 })
+    }
+
     if (isBackendAuthError(error)) {
       return NextResponse.json({ message: error.message }, { status: error.status })
     }

@@ -66,9 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return nextSession
       },
       logout: async () => {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-        })
+        await postLogout()
         setSession(null)
         router.refresh()
       },
@@ -106,6 +104,17 @@ async function postAuthSession(path: string, payload: LoginPayload | RegisterPay
 
   const body = (await response.json()) as { session: PublicAuthSession }
   return body.session
+}
+
+async function postLogout(): Promise<void> {
+  const response = await fetch('/api/auth/logout', {
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    const body = (await safeJson<AuthErrorResponse>(response)) ?? {}
+    throw new Error(body.message ?? 'Unable to sign out right now')
+  }
 }
 
 async function safeJson<T>(response: Response): Promise<T | null> {

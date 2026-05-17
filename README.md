@@ -32,6 +32,7 @@ Configure the backend base URL with one of these environment variables:
 
 - `MUSICLY_BACKEND_URL`
 - `NEXT_PUBLIC_MUSICLY_BACKEND_URL`
+- `MUSICLY_SESSION_SECRET` or `AUTH_SECRET` for signing the frontend session cookie
 
 If neither is set, the frontend falls back to:
 
