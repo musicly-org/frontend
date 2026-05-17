@@ -2,11 +2,11 @@ import type {
   Album,
   Release,
   Artist,
-  BackendLink,
   BackendLinks,
   Song,
   Track,
 } from './types'
+import { backendBaseUrl, fetchBackendJson, requiredBackendLink, resolveBackendHref } from './backend'
 
 type HalResource = {
   _links?: BackendLinks
@@ -51,21 +51,6 @@ type TrackResource = HalResource & {
   trackNumber: number
 }
 
-const backendBaseUrl =
-  process.env.MUSICLY_BACKEND_URL ??
-  process.env.NEXT_PUBLIC_MUSICLY_BACKEND_URL ??
-  'http://127.0.0.1:8080'
-
-function link(links: BackendLinks | undefined, rel: string): BackendLink {
-  const item = links?.[rel]
-
-  if (!item?.href) {
-    throw new Error(`Missing backend link relation: ${rel}`)
-  }
-
-  return item
-}
-
 function optionalLink(links: BackendLinks | undefined, rel: string): string | undefined {
   return links?.[rel]?.href
 }
@@ -74,35 +59,32 @@ function optionalText(value?: string | null): string | undefined {
   return value ?? undefined
 }
 
-async function fetchJson<T>(href: string): Promise<T> {
-  const response = await fetch(href, {
-    cache: 'no-store',
-    headers: {
-      Accept: 'application/json',
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Backend request failed: ${response.status} ${href}`)
-  }
-
-  return response.json() as Promise<T>
+async function loadApiRoot(): Promise<HalResource> {
+  return fetchBackendJson<HalResource>(backendBaseUrl)
 }
 
 async function loadRoot(): Promise<HalResource> {
-  return fetchJson<HalResource>(backendBaseUrl)
+  const apiRoot = await loadApiRoot()
+
+  if (apiRoot._links?.artists) {
+    return apiRoot
+  }
+
+  const catalogHref = resolveBackendHref(requiredBackendLink(apiRoot._links, 'catalog').href)
+
+  return fetchBackendJson<HalResource>(catalogHref)
 }
 
 export async function expandRootTemplate(rel: string, id: string): Promise<string> {
   const root = await loadRoot()
-  const template = link(root._links, rel).href
+  const template = requiredBackendLink(root._links, rel).href
 
-  return template.replace('{id}', encodeURIComponent(id))
+  return resolveBackendHref(template.replace('{id}', encodeURIComponent(id)))
 }
 
 async function loadRootLink(rel: string): Promise<string> {
   const root = await loadRoot()
-  return link(root._links, rel).href
+  return resolveBackendHref(requiredBackendLink(root._links, rel).href)
 }
 
 async function fetchCollection<T extends HalResource>(href: string): Promise<T[]> {
@@ -110,7 +92,7 @@ async function fetchCollection<T extends HalResource>(href: string): Promise<T[]
   let nextHref: string | undefined = href
 
   while (nextHref) {
-    const page: HalCollection<T> = await fetchJson<HalCollection<T>>(nextHref)
+    const page: HalCollection<T> = await fetchBackendJson<HalCollection<T>>(nextHref)
     items.push(...(page._embedded?.content ?? []))
     nextHref = page._links?.next?.href
   }
@@ -119,16 +101,16 @@ async function fetchCollection<T extends HalResource>(href: string): Promise<T[]
 }
 
 async function fetchResource<T extends HalResource>(href: string): Promise<T> {
-  return fetchJson<T>(href)
+  return fetchBackendJson<T>(href)
 }
 
 async function fetchFirstCollectionItem<T extends HalResource>(href: string): Promise<T | undefined> {
-  const page: HalCollection<T> = await fetchJson<HalCollection<T>>(href)
+  const page: HalCollection<T> = await fetchBackendJson<HalCollection<T>>(href)
   return page._embedded?.content?.[0]
 }
 
 function selfHref(resource: HalResource): string {
-  return link(resource._links, 'self').href
+  return requiredBackendLink(resource._links, 'self').href
 }
 
 function routeId(href: string): string {
