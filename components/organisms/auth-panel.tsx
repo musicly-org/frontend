@@ -45,6 +45,8 @@ export function AuthPanel() {
 
     try {
       await logout()
+    } catch (logoutError) {
+      setError(logoutError instanceof Error ? logoutError.message : 'Unable to sign out right now')
     } finally {
       setIsSubmitting(false)
     }

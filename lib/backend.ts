@@ -101,7 +101,7 @@ function normalizeBackendLinkValue(value: unknown, baseHref: string): unknown {
   if (typeof record.href === 'string') {
     return {
       ...record,
-      href: resolveBackendHref(record.href, baseHref),
+      href: resolveBackendLinkHref(record.href, baseHref, record.templated === true),
     }
   }
 
@@ -112,4 +112,18 @@ function normalizeBackendLinkValue(value: unknown, baseHref: string): unknown {
   }
 
   return normalized
+}
+
+function resolveBackendLinkHref(href: string, baseHref: string, templated: boolean): string {
+  if (!templated && !href.includes('{')) {
+    return resolveBackendHref(href, baseHref)
+  }
+
+  const normalizedHref = href
+    .replaceAll('{', '__MUSICLY_URI_TEMPLATE_OPEN__')
+    .replaceAll('}', '__MUSICLY_URI_TEMPLATE_CLOSE__')
+
+  return resolveBackendHref(normalizedHref, baseHref)
+    .replaceAll('__MUSICLY_URI_TEMPLATE_OPEN__', '{')
+    .replaceAll('__MUSICLY_URI_TEMPLATE_CLOSE__', '}')
 }
