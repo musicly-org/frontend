@@ -29,10 +29,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           method: 'GET',
           cache: 'no-store',
         })
-        const body = (await response.json()) as { session: PublicAuthSession | null }
+        const body = await safeJson<{ session: PublicAuthSession | null }>(response)
 
         if (active) {
-          setSession(body.session)
+          setSession(response.ok ? (body?.session ?? null) : null)
+        }
+      } catch {
+        if (active) {
+          setSession(null)
         }
       } finally {
         if (active) {

@@ -1,9 +1,14 @@
-import { fetchBackendJson, requiredBackendLink, resolveBackendHref, backendBaseUrl } from '@/lib/backend'
+import { fetchBackendDocumentJson, fetchBackendJson, requiredBackendLink, resolveBackendHref, backendBaseUrl } from '@/lib/backend'
 import type { AuthErrorResponse, AuthTokenResponse, LoginPayload, RegisterPayload } from '@/lib/auth'
 import type { BackendLinks } from '@/lib/types'
 
 type HalResource = {
   _links?: BackendLinks
+}
+
+type AuthRootDocument = {
+  href: string
+  resource: HalResource
 }
 
 class BackendAuthError extends Error {
@@ -32,7 +37,7 @@ async function postAuthRelation(
   payload: LoginPayload | RegisterPayload,
 ): Promise<AuthTokenResponse> {
   const authRoot = await loadAuthRoot(rel)
-  const href = resolveBackendHref(requiredBackendLink(authRoot._links, rel).href)
+  const href = resolveBackendHref(requiredBackendLink(authRoot.resource._links, rel).href, authRoot.href)
   const response = await fetch(href, {
     method: 'POST',
     headers: {
@@ -51,15 +56,21 @@ async function postAuthRelation(
   return response.json() as Promise<AuthTokenResponse>
 }
 
-async function loadAuthRoot(rel: 'login' | 'register'): Promise<HalResource> {
-  const apiRoot = await fetchBackendJson<HalResource>(backendBaseUrl)
+async function loadAuthRoot(rel: 'login' | 'register'): Promise<AuthRootDocument> {
+  const apiRoot = await fetchBackendDocumentJson<HalResource>(backendBaseUrl)
 
-  if (apiRoot._links?.[rel]) {
-    return apiRoot
+  if (apiRoot.body._links?.[rel]) {
+    return {
+      href: apiRoot.href,
+      resource: apiRoot.body,
+    }
   }
 
-  const authHref = resolveBackendHref(requiredBackendLink(apiRoot._links, 'auth').href)
-  return fetchBackendJson<HalResource>(authHref)
+  const authHref = resolveBackendHref(requiredBackendLink(apiRoot.body._links, 'auth').href, apiRoot.href)
+  return {
+    href: authHref,
+    resource: await fetchBackendJson<HalResource>(authHref),
+  }
 }
 
 async function safeJson<T>(response: Response): Promise<T | null> {

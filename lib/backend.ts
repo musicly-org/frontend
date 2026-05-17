@@ -20,6 +20,14 @@ export function requiredBackendLink(links: BackendLinks | undefined, rel: string
 }
 
 export async function fetchBackendJson<T>(href: string, init: RequestInit = {}): Promise<T> {
+  const document = await fetchBackendDocumentJson<T>(href, init)
+  return document.body
+}
+
+export async function fetchBackendDocumentJson<T>(
+  href: string,
+  init: RequestInit = {},
+): Promise<{ href: string, body: T }> {
   const response = await fetch(resolveBackendHref(href), {
     ...init,
     cache: 'no-store',
@@ -33,5 +41,75 @@ export async function fetchBackendJson<T>(href: string, init: RequestInit = {}):
     throw new Error(`Backend request failed: ${response.status} ${href}`)
   }
 
-  return response.json() as Promise<T>
+  return {
+    href: response.url,
+    body: normalizeHalLinks((await response.json()) as T, response.url),
+  }
+}
+
+function normalizeHalLinks<T>(value: T, baseHref: string): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeHalLinks(item, baseHref)) as T
+  }
+
+  if (!value || typeof value !== 'object') {
+    return value
+  }
+
+  const record = value as Record<string, unknown>
+  const normalized: Record<string, unknown> = { ...record }
+
+  if (record._links && typeof record._links === 'object') {
+    normalized._links = normalizeBackendLinks(record._links as Record<string, unknown>, baseHref)
+  }
+
+  for (const [key, child] of Object.entries(record)) {
+    if (key === '_links') {
+      continue
+    }
+
+    normalized[key] = normalizeHalLinks(child, baseHref)
+  }
+
+  return normalized as T
+}
+
+function normalizeBackendLinks(
+  links: Record<string, unknown>,
+  baseHref: string,
+): Record<string, unknown> {
+  const normalized: Record<string, unknown> = {}
+
+  for (const [rel, linkValue] of Object.entries(links)) {
+    normalized[rel] = normalizeBackendLinkValue(linkValue, baseHref)
+  }
+
+  return normalized
+}
+
+function normalizeBackendLinkValue(value: unknown, baseHref: string): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeBackendLinkValue(item, baseHref))
+  }
+
+  if (!value || typeof value !== 'object') {
+    return value
+  }
+
+  const record = value as Record<string, unknown>
+
+  if (typeof record.href === 'string') {
+    return {
+      ...record,
+      href: resolveBackendHref(record.href, baseHref),
+    }
+  }
+
+  const normalized: Record<string, unknown> = {}
+
+  for (const [key, child] of Object.entries(record)) {
+    normalized[key] = normalizeBackendLinkValue(child, baseHref)
+  }
+
+  return normalized
 }
