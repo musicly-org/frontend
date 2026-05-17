@@ -1,6 +1,5 @@
 import { ArtistsPage as ArtistsIndexPage } from '@/components/templates/artists-page'
 import { loadArtistsIndex } from '@/lib/catalog-api'
-import { SiteHeader } from '@/components/organisms/site-header'
 import { AlertCircle } from 'lucide-react'
 
 export default async function HomePage() {
@@ -15,33 +14,42 @@ export default async function HomePage() {
 
     return (
       <div className="min-h-screen">
-        <SiteHeader />
-        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-          <section className="mb-8">
-            <h1 className="mb-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Artists
-            </h1>
-            <p className="text-muted-foreground">
-              Browse the complete catalog of artists and their discographies
-            </p>
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* Hero Section */}
+          <section className="mb-12">
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
+                <span className="h-1 w-8 bg-primary rounded-full" />
+                Browse Collection
+              </span>
+              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl text-balance">
+                Artists
+              </h1>
+              <p className="max-w-xl text-lg text-muted-foreground leading-relaxed">
+                Browse the complete catalog of artists and their discographies
+              </p>
+            </div>
           </section>
 
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 dark:border-amber-900 dark:bg-amber-950">
+          {/* Error Card */}
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-6">
             <div className="flex items-start gap-4">
-              <AlertCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/20">
+                <AlertCircle className="h-5 w-5 text-destructive" />
+              </div>
               <div className="space-y-2">
-                <h2 className="font-semibold text-amber-900 dark:text-amber-100">
+                <h2 className="font-semibold text-foreground">
                   {isBackendUnavailable ? 'Backend Service Unavailable' : 'Error Loading Data'}
                 </h2>
-                <p className="text-sm text-amber-800 dark:text-amber-200">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {isBackendUnavailable ? (
                     <>
                       The Musicly backend API is not currently running. To use this application, 
                       please start the backend service at{' '}
-                      <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900">
+                      <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">
                         {process.env.MUSICLY_BACKEND_URL || process.env.NEXT_PUBLIC_MUSICLY_BACKEND_URL || 'http://localhost:8080'}
                       </code>
-                      {' '}or configure the <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900">MUSICLY_BACKEND_URL</code> environment variable.
+                      {' '}or configure the <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-foreground">MUSICLY_BACKEND_URL</code> environment variable.
                     </>
                   ) : (
                     errorMessage

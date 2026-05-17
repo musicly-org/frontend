@@ -21,30 +21,32 @@ export function RelationSection({
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-foreground flex items-center gap-3">
           {title}
           {count !== undefined && (
-            <span className="text-sm font-normal text-muted-foreground">
-              ({count})
+            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-secondary px-2 text-xs font-medium text-muted-foreground">
+              {count}
             </span>
           )}
         </h2>
         {viewAllHref && hasChildren && (
           <Link
             href={viewAllHref}
-            className="flex items-center gap-1 text-sm text-accent hover:text-accent/80 transition-colors"
+            className="flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors group"
           >
             View all
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         )}
       </div>
       {hasChildren ? (
-        <div className="space-y-2">{children}</div>
+        <div className="space-y-1">{children}</div>
       ) : (
-        <p className="text-sm text-muted-foreground py-4 px-4 bg-muted/50 rounded-lg">
-          {emptyMessage}
-        </p>
+        <div className="flex items-center justify-center py-12 px-6 bg-secondary/30 rounded-xl border border-border/50">
+          <p className="text-sm text-muted-foreground">
+            {emptyMessage}
+          </p>
+        </div>
       )}
     </section>
   )

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { Play } from 'lucide-react'
 
 interface TrackRowProps {
   discNumber?: number
@@ -29,21 +30,30 @@ export function TrackRow({
   dataEmbedUrl,
 }: TrackRowProps) {
   const rowClassName = cn(
-    'flex w-full items-center gap-4 border-b border-border/50 py-3 transition-colors last:border-0 -mx-2 rounded px-2 text-left',
-    isInteractive ? 'group cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/40' : 'group',
-    isInteractive ? 'hover:bg-muted/30' : '',
+    'flex w-full items-center gap-4 py-3 px-4 transition-all duration-200 text-left group',
+    isInteractive || href 
+      ? 'cursor-pointer hover:bg-secondary/50 focus:outline-none focus:ring-2 focus:ring-ring/40' 
+      : '',
   )
 
   const content = (
     <>
-      <span className="w-8 text-right text-sm tabular-nums text-muted-foreground">
-        {trackNumber}
+      {/* Track number with play icon on hover */}
+      <span className="w-8 text-right text-sm tabular-nums text-muted-foreground shrink-0 relative">
+        <span className="group-hover:hidden">{trackNumber}</span>
+        <span className="hidden group-hover:block">
+          <Play className="h-3.5 w-3.5 text-primary fill-primary ml-auto" />
+        </span>
       </span>
-      <span className="flex-1 font-medium text-foreground truncate">
+      
+      {/* Title */}
+      <span className="flex-1 font-medium text-foreground truncate group-hover:text-primary transition-colors">
         {title}
       </span>
+      
+      {/* Duration */}
       {duration && (
-        <span className="text-sm tabular-nums text-muted-foreground">
+        <span className="text-sm tabular-nums text-muted-foreground shrink-0">
           {duration}
         </span>
       )}
@@ -53,8 +63,8 @@ export function TrackRow({
   return (
     <>
       {showDisc && isFirstOfDisc && discNumber && (
-        <div className="pt-4 pb-2 first:pt-0">
-          <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+        <div className="px-4 pt-6 pb-2 first:pt-4 border-t border-border/50 first:border-0">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
             Disc {discNumber}
           </span>
         </div>
@@ -96,7 +106,7 @@ interface TrackListProps {
 
 export function TrackList({ children, className }: TrackListProps) {
   return (
-    <div className={cn('divide-y divide-transparent', className)}>
+    <div className={cn('divide-y divide-border/30', className)}>
       {children}
     </div>
   )
@@ -109,5 +119,5 @@ export function formatDuration(seconds?: number | null): string | undefined {
 
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }

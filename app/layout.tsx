@@ -1,15 +1,22 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SiteHeader } from '@/components/organisms/site-header'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: '--font-inter',
+  display: 'swap',
+})
+const geistMono = Geist_Mono({ 
+  subsets: ["latin"],
+  variable: '--font-geist-mono',
+})
 
 export const metadata: Metadata = {
-  title: 'Musicly - Discography Browser',
-  description: 'Explore artists, albums, and songs in a curated music archive',
+  title: 'Musicly - Discover Music, Lyrics & Artists',
+  description: 'Explore artists, albums, and songs in a curated music archive. Your ultimate destination for music discovery.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -30,14 +37,18 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: '#0a0a0f',
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background">
-      <body className="font-sans antialiased min-h-screen">
+    <html lang="en" className={`${inter.variable} ${geistMono.variable} bg-background`}>
+      <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         <SiteHeader />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
