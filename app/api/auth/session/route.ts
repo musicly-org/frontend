@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { clearSession, readSession } from '@/lib/auth-session'
+import { clearSession, readSession, toPublicSession } from '@/lib/auth-session'
 
 export async function GET() {
   const cookieStore = await cookies()
@@ -10,5 +10,5 @@ export async function GET() {
     clearSession(cookieStore)
   }
 
-  return NextResponse.json({ session })
+  return NextResponse.json({ session: session ? toPublicSession(session) : null })
 }

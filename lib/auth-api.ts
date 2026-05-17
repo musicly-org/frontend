@@ -31,7 +31,7 @@ async function postAuthRelation(
   rel: 'login' | 'register',
   payload: LoginPayload | RegisterPayload,
 ): Promise<AuthTokenResponse> {
-  const authRoot = await loadAuthRoot()
+  const authRoot = await loadAuthRoot(rel)
   const href = resolveBackendHref(requiredBackendLink(authRoot._links, rel).href)
   const response = await fetch(href, {
     method: 'POST',
@@ -51,10 +51,10 @@ async function postAuthRelation(
   return response.json() as Promise<AuthTokenResponse>
 }
 
-async function loadAuthRoot(): Promise<HalResource> {
+async function loadAuthRoot(rel: 'login' | 'register'): Promise<HalResource> {
   const apiRoot = await fetchBackendJson<HalResource>(backendBaseUrl)
 
-  if (apiRoot._links?.login || apiRoot._links?.register) {
+  if (apiRoot._links?.[rel]) {
     return apiRoot
   }
 

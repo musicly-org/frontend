@@ -251,7 +251,7 @@ export async function loadArtistsIndex(): Promise<(Artist & { albumCount: number
 
   return Promise.all(
     artists.map(async (artist) => {
-      const albumsHref = link(artist.links, 'albums').href
+      const albumsHref = requiredBackendLink(artist.links, 'albums').href
       const albums = await fetchCollection<AlbumResource>(albumsHref)
 
       return {
@@ -271,8 +271,8 @@ export async function loadArtistPage(artistHref: string): Promise<{
 
   const artist = toArtist(await fetchResource<ArtistResource>(artistHref))
   const [albums, songs] = await Promise.all([
-    fetchCollection<AlbumResource>(link(artist.links, 'albums').href),
-    fetchCollection<SongResource>(link(artist.links, 'songs').href),
+    fetchCollection<AlbumResource>(requiredBackendLink(artist.links, 'albums').href),
+    fetchCollection<SongResource>(requiredBackendLink(artist.links, 'songs').href),
   ])
   const albumsWithReleaseRoutes = await Promise.all(
     albums.map(async (albumResource) => {
@@ -291,7 +291,9 @@ export async function loadArtistPage(artistHref: string): Promise<{
   const songsWithTrackRoutes = await Promise.all(
     songs.map(async (songResource) => {
       const song = toSong(songResource)
-      const firstTrackResource = await fetchFirstCollectionItem<TrackResource>(link(song.links, 'tracks').href)
+      const firstTrackResource = await fetchFirstCollectionItem<TrackResource>(
+        requiredBackendLink(song.links, 'tracks').href,
+      )
       const firstTrack = firstTrackResource ? toTrack(firstTrackResource) : undefined
 
       return firstTrack
@@ -364,7 +366,7 @@ export async function loadDefaultReleaseFromAlbum(albumHref: string, options: {
   await loadRoot()
 
   const album = await fetchResource<AlbumResource>(albumHref)
-  const releasesHref = options.releasesHref ?? link(album._links, 'releases').href
+  const releasesHref = options.releasesHref ?? requiredBackendLink(album._links, 'releases').href
   const releases = await fetchCollection<ReleaseResource>(releasesHref)
   const release = releases.find((item) => item.default) ?? releases[0]
 
@@ -399,7 +401,7 @@ export async function loadReleasePage(options: {
   await loadRoot()
 
   const releaseResource = await fetchResource<ReleaseResource>(options.releaseHref)
-  const canonicalAlbumHref = link(releaseResource._links, 'album').href
+  const canonicalAlbumHref = requiredBackendLink(releaseResource._links, 'album').href
   const albumResource = await fetchResource<AlbumResource>(canonicalAlbumHref)
   const resolvedReleasesHref = options.releasesHref ?? optionalLink(albumResource._links, 'releases')
   const releaseResources = resolvedReleasesHref
@@ -449,7 +451,7 @@ export async function loadReleasePage(options: {
         albumImageUrl: album.imageUrl,
       }),
     )
-  const tracks = await fetchTracks(link(release.links, 'tracks').href)
+  const tracks = await fetchTracks(requiredBackendLink(release.links, 'tracks').href)
 
   return {
     artists,
@@ -509,12 +511,12 @@ export async function loadTrackPage(trackHref: string): Promise<{
 
   const trackResource = await fetchResource<TrackResource>(trackHref)
   const track = toTrack(trackResource)
-  const songHref = link(track.links, 'song').href
+  const songHref = requiredBackendLink(track.links, 'song').href
   const songResource = await fetchResource<SongResource>(songHref)
   const song = toSong(songResource)
-  const releaseId = routeId(link(track.links, 'release').href)
+  const releaseId = routeId(requiredBackendLink(track.links, 'release').href)
   const artistsPromise = fetchLinkedArtists(song.links)
-  const trackResources = await fetchCollection<TrackResource>(link(song.links, 'tracks').href)
+  const trackResources = await fetchCollection<TrackResource>(requiredBackendLink(song.links, 'tracks').href)
   const allTracks = uniqueBy(
     trackResources.map((item) => toTrack(item)),
     (item) => item.id,

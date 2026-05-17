@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { createSession, writeSession } from '@/lib/auth-session'
+import { createSession, toPublicSession, writeSession } from '@/lib/auth-session'
 import { isBackendAuthError, loginAgainstBackend } from '@/lib/auth-api'
 import type { LoginPayload } from '@/lib/auth'
 
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
     writeSession(await cookies(), session)
 
-    return NextResponse.json(session)
+    return NextResponse.json({ session: toPublicSession(session) })
   } catch (error) {
     if (isBackendAuthError(error)) {
       return NextResponse.json({ message: error.message }, { status: error.status })

@@ -6,11 +6,25 @@ export interface AuthTokenResponse {
   permissions: string[]
 }
 
-export interface AuthSession extends AuthTokenResponse {
+export interface AuthSession {
+  accessToken: string
   email?: string
   displayName?: string
   expiresAt: string
+  roles: string[]
+  permissions: string[]
 }
+
+export interface PublicAuthSession {
+  email?: string
+  displayName?: string
+  expiresAt: string
+  roles: string[]
+  permissions: string[]
+}
+
+type SessionWithClaims = Pick<PublicAuthSession, 'roles' | 'permissions'>
+type SessionWithRoles = Pick<PublicAuthSession, 'roles'>
 
 export interface LoginPayload {
   email: string
@@ -25,11 +39,11 @@ export interface AuthErrorResponse {
   message?: string
 }
 
-export function hasPermission(session: AuthSession | null, permission: string): boolean {
+export function hasPermission(session: SessionWithClaims | null, permission: string): boolean {
   return session?.permissions.includes(permission) ?? false
 }
 
-export function primaryRoleLabel(session: AuthSession | null): string | undefined {
+export function primaryRoleLabel(session: SessionWithRoles | null): string | undefined {
   if (!session) {
     return undefined
   }

@@ -1,6 +1,13 @@
-import type { AuthSession, AuthTokenResponse } from '@/lib/auth'
+import type { AuthSession, AuthTokenResponse, PublicAuthSession } from '@/lib/auth'
 
 const SESSION_COOKIE_NAME = 'musicly_session'
+
+type StoredAuthSession = {
+  a?: string
+  e?: string
+  accessToken?: string
+  expiresAt?: string
+}
 
 interface RequestCookieStore {
   get(name: string): { value: string } | undefined
@@ -21,15 +28,8 @@ interface ResponseCookieStore {
 }
 
 export function createSession(token: AuthTokenResponse): AuthSession {
-  const claims = decodeJwtClaims(token.accessToken)
   const expiresAt = new Date(Date.now() + token.expiresInSeconds * 1000).toISOString()
-
-  return {
-    ...token,
-    email: stringClaim(claims, 'email'),
-    displayName: stringClaim(claims, 'displayName'),
-    expiresAt,
-  }
+  return buildSession(token.accessToken, expiresAt)
 }
 
 export function readSession(cookiesStore: RequestCookieStore): AuthSession | null {
@@ -40,30 +40,42 @@ export function readSession(cookiesStore: RequestCookieStore): AuthSession | nul
   }
 
   try {
-    const session = JSON.parse(raw) as AuthSession
+    const stored = JSON.parse(raw) as StoredAuthSession
+    const accessToken = stored.a ?? stored.accessToken
+    const expiresAt = stored.e ?? stored.expiresAt
 
-    if (!session.accessToken || !session.expiresAt) {
+    if (!accessToken || !expiresAt) {
       return null
     }
 
-    if (new Date(session.expiresAt).getTime() <= Date.now()) {
+    if (new Date(expiresAt).getTime() <= Date.now()) {
       return null
     }
 
-    return session
+    return buildSession(accessToken, expiresAt)
   } catch {
     return null
   }
 }
 
 export function writeSession(cookiesStore: ResponseCookieStore, session: AuthSession) {
-  cookiesStore.set(SESSION_COOKIE_NAME, JSON.stringify(session), {
+  cookiesStore.set(SESSION_COOKIE_NAME, JSON.stringify({ a: session.accessToken, e: session.expiresAt }), {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     expires: new Date(session.expiresAt),
   })
+}
+
+export function toPublicSession(session: AuthSession): PublicAuthSession {
+  return {
+    email: session.email,
+    displayName: session.displayName,
+    expiresAt: session.expiresAt,
+    roles: session.roles,
+    permissions: session.permissions,
+  }
 }
 
 export function clearSession(cookiesStore: ResponseCookieStore) {
@@ -97,4 +109,27 @@ function decodeJwtClaims(token: string): Record<string, unknown> {
 function stringClaim(claims: Record<string, unknown>, key: string): string | undefined {
   const value = claims[key]
   return typeof value === 'string' && value.length > 0 ? value : undefined
+}
+
+function stringArrayClaim(claims: Record<string, unknown>, key: string): string[] {
+  const value = claims[key]
+
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.filter((item): item is string => typeof item === 'string' && item.length > 0)
+}
+
+function buildSession(accessToken: string, expiresAt: string): AuthSession {
+  const claims = decodeJwtClaims(accessToken)
+
+  return {
+    accessToken,
+    email: stringClaim(claims, 'email'),
+    displayName: stringClaim(claims, 'displayName'),
+    expiresAt,
+    roles: stringArrayClaim(claims, 'roles'),
+    permissions: stringArrayClaim(claims, 'permissions'),
+  }
 }

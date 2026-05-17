@@ -2,21 +2,21 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { AuthErrorResponse, AuthSession, LoginPayload, RegisterPayload } from '@/lib/auth'
+import type { AuthErrorResponse, LoginPayload, PublicAuthSession, RegisterPayload } from '@/lib/auth'
 
 interface AuthContextValue {
-  session: AuthSession | null
+  session: PublicAuthSession | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (payload: LoginPayload) => Promise<AuthSession>
-  register: (payload: RegisterPayload) => Promise<AuthSession>
+  login: (payload: LoginPayload) => Promise<PublicAuthSession>
+  register: (payload: RegisterPayload) => Promise<PublicAuthSession>
   logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(null)
+  const [session, setSession] = useState<PublicAuthSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           method: 'GET',
           cache: 'no-store',
         })
-        const body = (await response.json()) as { session: AuthSession | null }
+        const body = (await response.json()) as { session: PublicAuthSession | null }
 
         if (active) {
           setSession(body.session)
@@ -89,7 +89,7 @@ export function useAuth() {
   return context
 }
 
-async function postAuthSession(path: string, payload: LoginPayload | RegisterPayload): Promise<AuthSession> {
+async function postAuthSession(path: string, payload: LoginPayload | RegisterPayload): Promise<PublicAuthSession> {
   const response = await fetch(path, {
     method: 'POST',
     headers: {
@@ -104,7 +104,8 @@ async function postAuthSession(path: string, payload: LoginPayload | RegisterPay
     throw new Error(body.message ?? 'Authentication request failed')
   }
 
-  return response.json() as Promise<AuthSession>
+  const body = (await response.json()) as { session: PublicAuthSession }
+  return body.session
 }
 
 async function safeJson<T>(response: Response): Promise<T | null> {
