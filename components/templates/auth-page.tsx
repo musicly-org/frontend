@@ -1,38 +1,51 @@
 import { AuthPanel } from '@/components/organisms/auth-panel'
+import { Music, Shield, Zap } from 'lucide-react'
 
 export function AuthPage() {
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(199,151,61,0.16),_transparent_34%),linear-gradient(180deg,_transparent,_rgba(39,32,24,0.03))]">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-16">
+    <main className="min-h-screen relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-background to-background" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+      
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16 lg:px-8 lg:py-20">
+        {/* Left content */}
         <section className="flex flex-col justify-center">
-          <div className="inline-flex w-fit items-center rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.22em] text-accent">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-accent/10 ring-1 ring-accent/20 px-4 py-1.5 text-xs font-medium uppercase tracking-[0.2em] text-accent">
+            <Music className="w-3.5 h-3.5" />
             Musicly Access
           </div>
-          <h1 className="mt-6 max-w-xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-            Sign in or create your Musicly account.
+          
+          <h1 className="mt-8 max-w-xl text-4xl font-serif font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl text-balance">
+            Your music journey starts here.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Authentication now runs through the backend auth module. New registrations are provisioned as regular
-            users, while existing admin credentials continue to unlock catalog management capabilities.
+          
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground text-pretty">
+            Sign in to access the full Musicly catalog, save your favorite releases, and unlock personalized discovery features.
           </p>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          <div className="mt-12 grid gap-4 sm:grid-cols-3">
             <FeatureCard
-              title="Regular by default"
-              description="Frontend registration uses the backend /auth/register flow and lands new accounts in the regular-user role."
+              icon={<Shield className="w-5 h-5" />}
+              title="Secure Access"
+              description="Your session is protected with HTTP-only cookies and secure backend authentication."
             />
             <FeatureCard
-              title="Secure session"
-              description="The browser talks to same-origin Next.js auth routes, which keep the backend token in an HTTP-only cookie."
+              icon={<Music className="w-5 h-5" />}
+              title="Full Catalog"
+              description="Browse artists, releases, and tracks from our curated music database."
             />
             <FeatureCard
-              title="Role aware"
-              description="The UI reflects backend-issued roles and permissions so future protected features have a single source of truth."
+              icon={<Zap className="w-5 h-5" />}
+              title="Role-Based"
+              description="Access features based on your account permissions and role."
             />
           </div>
         </section>
 
-        <section className="lg:pt-8">
+        {/* Right panel */}
+        <section className="flex items-center lg:pt-8">
           <AuthPanel />
         </section>
       </div>
@@ -41,16 +54,21 @@ export function AuthPage() {
 }
 
 function FeatureCard({
+  icon,
   title,
   description,
 }: {
+  icon: React.ReactNode
   title: string
   description: string
 }) {
   return (
-    <article className="rounded-2xl border border-border/80 bg-card/80 p-5 shadow-sm backdrop-blur-sm">
-      <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-foreground">{title}</h2>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">{description}</p>
+    <article className="group rounded-2xl bg-surface-elevated ring-1 ring-white/5 p-5 transition-all hover:ring-white/10">
+      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent mb-4">
+        {icon}
+      </div>
+      <h2 className="text-sm font-semibold text-foreground mb-2">{title}</h2>
+      <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
     </article>
   )
 }

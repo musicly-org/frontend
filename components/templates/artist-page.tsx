@@ -1,6 +1,6 @@
 import { EntityHero } from '@/components/organisms/entity-hero'
 import { RelationSection } from '@/components/organisms/relation-section'
-import { RelationCard } from '@/components/molecules/relation-card'
+import { RelationCard, ReleaseCard } from '@/components/molecules/relation-card'
 import type { Album, Artist, Song } from '@/lib/types'
 
 interface ArtistPageProps {
@@ -12,41 +12,44 @@ interface ArtistPageProps {
 export function ArtistPage({ artist, albums, songs }: ArtistPageProps) {
   return (
     <div className="min-h-screen">
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <EntityHero
           title={artist.name}
           subtitle="Artist"
           imageUrl={artist.imageUrl}
           imageAlt={artist.name}
           size="lg"
+          variant="immersive"
           metadata={[
-            `${albums.length} ${albums.length === 1 ? 'album' : 'albums'}`,
-            `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}`,
+            `${albums.length} ${albums.length === 1 ? 'release' : 'releases'}`,
+            `${songs.length} ${songs.length === 1 ? 'track' : 'tracks'}`,
           ]}
         />
 
-        <div className="mt-12 grid gap-12 lg:grid-cols-2">
+        <div className="mt-16 space-y-16">
+          {/* Discography as grid */}
           <RelationSection
-            title="Albums"
+            title="Discography"
             count={albums.length}
-            emptyMessage="No albums available"
+            emptyMessage="No releases available"
+            variant="grid"
           >
             {albums.map((album) => (
-              <RelationCard
+              <ReleaseCard
                 key={album.id}
                 href={album.routeHref}
                 title={album.title}
-                metadata={album.releasedAt}
+                year={album.releasedAt ? parseInt(album.releasedAt) : undefined}
                 imageUrl={album.imageUrl}
-                imageAlt={album.title}
               />
             ))}
           </RelationSection>
 
+          {/* Tracks list */}
           <RelationSection
-            title="Songs"
+            title="Tracks"
             count={songs.length}
-            emptyMessage="No songs available"
+            emptyMessage="No tracks available"
           >
             {songs.map((song) => (
               <RelationCard
