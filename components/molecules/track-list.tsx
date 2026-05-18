@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { Play } from 'lucide-react'
 
 interface TrackRowProps {
   discNumber?: number
@@ -13,6 +14,7 @@ interface TrackRowProps {
   isInteractive?: boolean
   dataTrackId?: string
   dataEmbedUrl?: string
+  isPlaying?: boolean
 }
 
 export function TrackRow({
@@ -27,23 +29,44 @@ export function TrackRow({
   isInteractive = false,
   dataTrackId,
   dataEmbedUrl,
+  isPlaying = false,
 }: TrackRowProps) {
   const rowClassName = cn(
-    'flex w-full items-center gap-4 border-b border-border/50 py-3 transition-colors last:border-0 -mx-2 rounded px-2 text-left',
-    isInteractive ? 'group cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/40' : 'group',
-    isInteractive ? 'hover:bg-muted/30' : '',
+    'group flex w-full items-center gap-4 py-3 px-4 -mx-4 rounded-xl transition-all duration-200 text-left',
+    isInteractive || href ? 'cursor-pointer hover:bg-card-hover' : '',
+    isPlaying && 'bg-accent/10',
   )
 
   const content = (
     <>
-      <span className="w-8 text-right text-sm tabular-nums text-muted-foreground">
-        {trackNumber}
-      </span>
-      <span className="flex-1 font-medium text-foreground truncate">
+      {/* Track number / Play indicator */}
+      <div className="relative w-8 flex items-center justify-center">
+        <span className={cn(
+          'text-sm tabular-nums transition-opacity',
+          isPlaying ? 'text-accent font-medium' : 'text-muted-foreground/60',
+          (isInteractive || href) && 'group-hover:opacity-0'
+        )}>
+          {trackNumber}
+        </span>
+        {(isInteractive || href) && (
+          <Play className={cn(
+            'absolute w-4 h-4 fill-current opacity-0 group-hover:opacity-100 transition-opacity',
+            isPlaying ? 'text-accent' : 'text-foreground'
+          )} />
+        )}
+      </div>
+      
+      {/* Title */}
+      <span className={cn(
+        'flex-1 font-medium truncate transition-colors',
+        isPlaying ? 'text-accent' : 'text-foreground group-hover:text-accent'
+      )}>
         {title}
       </span>
+      
+      {/* Duration */}
       {duration && (
-        <span className="text-sm tabular-nums text-muted-foreground">
+        <span className="text-sm tabular-nums text-muted-foreground/60">
           {duration}
         </span>
       )}
@@ -53,8 +76,8 @@ export function TrackRow({
   return (
     <>
       {showDisc && isFirstOfDisc && discNumber && (
-        <div className="pt-4 pb-2 first:pt-0">
-          <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+        <div className="pt-6 pb-3 first:pt-0">
+          <span className="text-xs uppercase tracking-[0.15em] text-muted-foreground font-medium">
             Disc {discNumber}
           </span>
         </div>
@@ -96,7 +119,7 @@ interface TrackListProps {
 
 export function TrackList({ children, className }: TrackListProps) {
   return (
-    <div className={cn('divide-y divide-transparent', className)}>
+    <div className={cn('space-y-1', className)}>
       {children}
     </div>
   )
@@ -109,5 +132,5 @@ export function formatDuration(seconds?: number | null): string | undefined {
 
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }

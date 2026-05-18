@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShieldCheck, UserPlus, LogIn, LogOut } from 'lucide-react'
+import { ShieldCheck, UserPlus, LogIn, LogOut, Music } from 'lucide-react'
 import { hasPermission, primaryRoleLabel } from '@/lib/auth'
 import { useAuth } from '@/components/providers/auth-provider'
 import { cn } from '@/lib/utils'
@@ -54,72 +54,87 @@ export function AuthPanel() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <p className="text-sm text-muted-foreground">Checking your session…</p>
+      <div className="w-full rounded-3xl bg-surface-elevated ring-1 ring-white/5 p-8">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Checking your session…</p>
+        </div>
       </div>
     )
   }
 
   if (isAuthenticated && session) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-accent">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Signed in
+      <div className="w-full rounded-3xl bg-surface-elevated ring-1 ring-white/5 p-8">
+        <div className="flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.15em] text-accent ring-1 ring-accent/20">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Signed in
+              </div>
+              <div>
+                <h2 className="text-2xl font-serif font-bold tracking-tight text-foreground">
+                  {session.displayName || session.email || 'Musicly account'}
+                </h2>
+                {session.email && <p className="mt-1 text-sm text-muted-foreground">{session.email}</p>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {session.roles.map((role) => (
+                  <span
+                    key={role}
+                    className="rounded-full bg-surface-elevated px-3 py-1 text-xs font-medium text-muted-foreground ring-1 ring-white/10"
+                  >
+                    {role}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                {session.displayName || session.email || 'Musicly account'}
-              </h2>
-              {session.email && <p className="mt-1 text-sm text-muted-foreground">{session.email}</p>}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {session.roles.map((role) => (
-                <span
-                  key={role}
-                  className="rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground"
-                >
-                  {role}
-                </span>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-2 rounded-full bg-surface-elevated px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-white/10 transition-all hover:ring-white/20 hover:bg-card-hover disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
-        </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <CapabilityCard
-            label="Access level"
-            value={primaryRoleLabel(session) ?? 'Signed in'}
-            hint={
-              hasPermission(session, 'catalog:write')
-                ? 'This account can manage catalog content.'
-                : 'This account can browse the catalog and use reader features.'
-            }
-          />
-          <CapabilityCard
-            label="Token lifetime"
-            value={new Date(session.expiresAt).toLocaleString()}
-            hint="The frontend stores your backend-issued session in a secure same-origin cookie."
-          />
+          {/* Capabilities */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CapabilityCard
+              label="Access level"
+              value={primaryRoleLabel(session) ?? 'Signed in'}
+              hint={
+                hasPermission(session, 'catalog:write')
+                  ? 'This account can manage catalog content.'
+                  : 'This account can browse the catalog.'
+              }
+            />
+            <CapabilityCard
+              label="Session expires"
+              value={new Date(session.expiresAt).toLocaleDateString()}
+              hint="Secure HTTP-only session cookie."
+            />
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-      <div className="flex gap-2 rounded-full bg-secondary p-1">
+    <div className="w-full rounded-3xl bg-surface-elevated ring-1 ring-white/5 p-8">
+      {/* Logo */}
+      <div className="flex justify-center mb-8">
+        <div className="w-14 h-14 rounded-2xl bg-accent/10 ring-1 ring-accent/20 flex items-center justify-center">
+          <Music className="w-7 h-7 text-accent" />
+        </div>
+      </div>
+      
+      {/* Mode tabs */}
+      <div className="flex gap-1 rounded-2xl bg-background p-1.5 ring-1 ring-white/5">
         <ModeButton
           active={mode === 'login'}
           label="Sign In"
@@ -134,7 +149,7 @@ export function AuthPanel() {
         />
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         {mode === 'register' && (
           <Field
             label="Display name"
@@ -150,7 +165,7 @@ export function AuthPanel() {
           type="email"
           value={email}
           onChange={setEmail}
-          placeholder="listener@musicly.local"
+          placeholder="you@example.com"
           autoComplete="email"
           required
         />
@@ -166,7 +181,7 @@ export function AuthPanel() {
         />
 
         {error && (
-          <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <div className="rounded-xl bg-destructive/10 ring-1 ring-destructive/20 px-4 py-3 text-sm text-destructive">
             {error}
           </div>
         )}
@@ -174,15 +189,15 @@ export function AuthPanel() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3.5 text-sm font-medium text-accent-foreground shadow-lg shadow-accent/20 transition-all hover:bg-accent/90 hover:shadow-accent/30 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {mode === 'login' ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-          {isSubmitting ? 'Working…' : mode === 'login' ? 'Sign in to Musicly' : 'Create regular user account'}
+          {isSubmitting ? 'Working…' : mode === 'login' ? 'Sign in' : 'Create account'}
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-muted-foreground">
-        New registrations are created as regular users by default and receive read access to the catalog.
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        By continuing, you agree to our Terms of Service and Privacy Policy.
       </p>
     </div>
   )
@@ -215,7 +230,7 @@ function Field({
         placeholder={placeholder}
         autoComplete={autoComplete}
         required={required}
-        className="h-12 w-full rounded-xl border border-input bg-background px-4 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+        className="h-12 w-full rounded-xl bg-background px-4 text-sm text-foreground ring-1 ring-white/10 transition-all placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/50"
       />
     </label>
   )
@@ -237,8 +252,10 @@ function ModeButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors',
-        active ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+        'inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all',
+        active 
+          ? 'bg-surface-elevated text-foreground ring-1 ring-white/10 shadow-sm' 
+          : 'text-muted-foreground hover:text-foreground',
       )}
     >
       {icon}
@@ -257,10 +274,10 @@ function CapabilityCard({
   hint: string
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-background p-4">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+    <div className="rounded-2xl bg-background p-4 ring-1 ring-white/5">
+      <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">{label}</p>
       <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{value}</p>
-      <p className="mt-2 text-sm text-muted-foreground">{hint}</p>
+      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
     </div>
   )
 }

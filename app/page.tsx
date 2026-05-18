@@ -16,32 +16,35 @@ export default async function HomePage() {
     return (
       <div className="min-h-screen">
         <SiteHeader />
-        <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-          <section className="mb-8">
-            <h1 className="mb-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        <main className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-xs uppercase tracking-[0.2em] text-accent font-medium">
+              Discover
+            </span>
+            <h1 className="mt-2 text-4xl font-serif font-bold tracking-tight text-foreground sm:text-5xl">
               Artists
             </h1>
-            <p className="text-muted-foreground">
+            <p className="mt-4 text-lg text-muted-foreground">
               Browse the complete catalog of artists and their discographies
             </p>
-          </section>
+          </div>
 
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 dark:border-amber-900 dark:bg-amber-950">
-            <div className="flex items-start gap-4">
-              <AlertCircle className="mt-0.5 h-6 w-6 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="rounded-2xl bg-surface-elevated ring-1 ring-amber-500/20 p-8">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <AlertCircle className="h-6 w-6 text-amber-500" />
+              </div>
               <div className="space-y-2">
-                <h2 className="font-semibold text-amber-900 dark:text-amber-100">
+                <h2 className="text-lg font-semibold text-foreground">
                   {isBackendUnavailable ? 'Backend Service Unavailable' : 'Error Loading Data'}
                 </h2>
-                <p className="text-sm text-amber-800 dark:text-amber-200">
+                <p className="text-sm text-muted-foreground max-w-md">
                   {isBackendUnavailable ? (
                     <>
-                      The Musicly backend API is not currently running. To use this application, 
-                      please start the backend service at{' '}
-                      <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900">
+                      The Musicly backend API is not currently running. Please start the backend service at{' '}
+                      <code className="rounded-md bg-surface-elevated px-2 py-0.5 font-mono text-xs text-accent ring-1 ring-white/10">
                         {process.env.MUSICLY_BACKEND_URL || process.env.NEXT_PUBLIC_MUSICLY_BACKEND_URL || 'http://localhost:8080'}
                       </code>
-                      {' '}or configure the <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono text-xs dark:bg-amber-900">MUSICLY_BACKEND_URL</code> environment variable.
                     </>
                   ) : (
                     errorMessage
