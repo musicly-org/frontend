@@ -24,17 +24,9 @@ export function ArtistsPage({ artists }: ArtistsPageProps) {
           <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-background to-background" />
           
           <div className="relative mx-auto max-w-7xl px-4 pt-12 pb-16 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-2 mb-2">
-              <span className="text-xs uppercase tracking-[0.2em] text-accent font-medium">
-                Discover
-              </span>
-              <h1 className="text-4xl font-serif font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl text-balance">
-                Artists
-              </h1>
-            </div>
-            <p className="text-lg text-muted-foreground max-w-2xl text-pretty">
-              Explore the complete catalog of artists and dive into their discographies
-            </p>
+            <h1 className="text-4xl font-serif font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl text-balance">
+              Artists
+            </h1>
             
             {/* Stats bar */}
             <div className="flex items-center gap-6 mt-8 pt-8 border-t border-border/50">
