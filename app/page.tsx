@@ -18,15 +18,9 @@ export default async function HomePage() {
         <SiteHeader />
         <main className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <span className="text-xs uppercase tracking-[0.2em] text-accent font-medium">
-              Discover
-            </span>
-            <h1 className="mt-2 text-4xl font-serif font-bold tracking-tight text-foreground sm:text-5xl">
+            <h1 className="text-4xl font-serif font-bold tracking-tight text-foreground sm:text-5xl">
               Artists
             </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Browse the complete catalog of artists and their discographies
-            </p>
           </div>
 
           <div className="rounded-2xl bg-surface-elevated ring-1 ring-amber-500/20 p-8">
